@@ -96,6 +96,14 @@ test('API', { skip }, async (t) => {
     assert.strictEqual((await status({ status: 'failed', reason: 'x' })).status, 409); // terminal
   });
 
+  await t.test('event time from a device clock in the future is capped at server time', async () => {
+    const job = await jobByTitle('Follow-up visit'); // in_progress, no requirements
+    const future = new Date(Date.now() + 3600e3).toISOString();
+    await request(app).post(`/jobs/${job.id}/status`).set(auth).send({ status: 'failed', reason: 'x', occurredAt: future }).expect(200);
+    const history = (await request(app).get(`/jobs/${job.id}`).set(auth)).body.history;
+    assert.ok(new Date(history.at(-1).occurredAt).getTime() <= Date.now() + 1000);
+  });
+
   await t.test('declining requires a reason', async () => {
     const job = await jobByTitle('Verify customer address');
     const res = await request(app).post(`/jobs/${job.id}/status`).set(auth).send({ status: 'declined' });

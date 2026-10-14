@@ -74,7 +74,7 @@ completed, declined, cancelled, failed are final
 - Invalid transitions return 409 `invalid_transition`.
 
 ### Offline sync support
-Send a client-generated UUID as `clientId` on status changes, notes and evidence. Replaying the same `clientId` returns the original result instead of creating a duplicate (status replays return the job unchanged), so the app can safely retry its queue. `occurredAt` records when a status change really happened on the device. Replay queued actions in order.
+Send a client-generated UUID as `clientId` on status changes, notes and evidence. Replaying the same `clientId` returns the original result instead of creating a duplicate (status replays return the job unchanged), so the app can safely retry its queue. `occurredAt` records when a status change really happened on the device (capped at server time, so a phone with a wrong clock can't write events into the future). Replay queued actions in order.
 
 ### Limits
 - Files: 10 MB; photos jpeg/png/webp/heic; documents pdf/txt/doc(x)/xls(x).

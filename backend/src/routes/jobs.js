@@ -158,8 +158,9 @@ r.post('/jobs/:id/status', wrap(async (req, res) => {
       const problems = sm.completionProblems(job, n);
       if (Object.keys(problems).length) throw new ApiError(422, 'incomplete_job', 'Job cannot be completed yet', problems);
     }
+    // A device with a wrong clock must not write events into the future: cap at server time.
     await db.query(
-      'INSERT INTO status_events (job_id, client_id, from_status, to_status, reason, occurred_at) VALUES ($1,$2,$3,$4,$5, COALESCE($6, now()))',
+      'INSERT INTO status_events (job_id, client_id, from_status, to_status, reason, occurred_at) VALUES ($1,$2,$3,$4,$5, LEAST(COALESCE($6, now()), now()))',
       [job.id, body.clientId ?? null, job.status, body.status, body.reason ?? null, body.occurredAt ?? null],
     );
     const { rows } = await db.query('UPDATE jobs SET status = $2, updated_at = now() WHERE id = $1 RETURNING *', [job.id, body.status]);
