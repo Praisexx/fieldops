@@ -63,7 +63,7 @@ class ActivityScreen extends ConsumerWidget {
                   itemBuilder: (_, i) {
                     final e = feed[i];
                     return ListTile(
-                      leading: CircleAvatar(backgroundColor: e.job.status.color.withValues(alpha: 0.12), child: Icon(e.icon, color: e.job.status.color, size: 20)),
+                      leading: CircleAvatar(backgroundColor: e.job.status.color.withValues(alpha: 0.12), child: Icon(e.icon, color: readable(context, e.job.status.color), size: 20)),
                       title: Text(e.text, maxLines: 2, overflow: TextOverflow.ellipsis),
                       subtitle: Text('${e.job.title}\n${formatDateTime(e.at)}${e.pending ? ' · waiting to sync' : ''}', maxLines: 3, overflow: TextOverflow.ellipsis),
                       isThreeLine: true,

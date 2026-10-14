@@ -6,6 +6,13 @@ import '../core/theme.dart';
 import '../domain/job_status.dart';
 import '../domain/models.dart';
 
+/// Status/priority colours are tuned for light surfaces; lift their lightness on dark ones so text stays readable.
+Color readable(BuildContext context, Color c) {
+  if (Theme.of(context).brightness != Brightness.dark) return c;
+  final hsl = HSLColor.fromColor(c);
+  return hsl.withLightness(hsl.lightness < 0.72 ? 0.72 : hsl.lightness).withSaturation((hsl.saturation * 0.9).clamp(0, 1)).toColor();
+}
+
 /// Centres content and caps its width on tablets / landscape.
 class ContentWidth extends StatelessWidget {
   const ContentWidth({super.key, required this.child});
@@ -22,7 +29,7 @@ class StatusChip extends StatelessWidget {
   final JobStatus status;
   @override
   Widget build(BuildContext context) {
-    final c = status.color;
+    final c = readable(context, status.color);
     return Semantics(
       label: 'Status: ${status.label}',
       excludeSemantics: true,
@@ -44,7 +51,7 @@ class PriorityTag extends StatelessWidget {
   final JobPriority priority;
   @override
   Widget build(BuildContext context) {
-    final c = priority.color;
+    final c = readable(context, priority.color);
     return Semantics(
       label: 'Priority: ${priority.label}',
       excludeSemantics: true,

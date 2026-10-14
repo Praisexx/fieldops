@@ -194,7 +194,7 @@ class _StatTile extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(14),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Icon(icon, color: color),
+              Icon(icon, color: readable(context, color)),
               const SizedBox(height: 8),
               Text('$count', style: t.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700)),
               Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: t.textTheme.bodyMedium?.copyWith(color: t.colorScheme.onSurfaceVariant)),
