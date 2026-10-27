@@ -72,6 +72,13 @@ class AuthController extends AsyncNotifier<Session?> {
   @override
   Future<Session?> build() => ref.read(tokenStorageProvider).read();
 
+  /// Sync status/timer, filters and the selected tab belong to one session; they must not leak into the next sign-in.
+  void _resetSession() {
+    ref.invalidate(syncProvider);
+    ref.invalidate(jobFilterProvider);
+    ref.invalidate(tabIndexProvider);
+  }
+
   Future<void> login(String email, String password) async {
     final s = await ref.read(apiClientProvider).login(email, password);
     final db = ref.read(localDbProvider);
@@ -81,6 +88,7 @@ class AuthController extends AsyncNotifier<Session?> {
     await db.setMeta('userId', s.userId);
     await ref.read(tokenStorageProvider).write(s);
     ref.read(authNoticeProvider.notifier).set(null);
+    _resetSession();
     state = AsyncData(s);
   }
 
@@ -90,6 +98,7 @@ class AuthController extends AsyncNotifier<Session?> {
     await ref.read(tokenStorageProvider).clear();
     await ref.read(repositoryProvider).clearAll();
     ref.read(authNoticeProvider.notifier).set(null);
+    _resetSession();
     state = const AsyncData(null);
   }
 
@@ -98,6 +107,7 @@ class AuthController extends AsyncNotifier<Session?> {
   void sessionExpired() {
     if (state.value == null) return;
     ref.read(authNoticeProvider.notifier).set('Your session expired. Sign in again to continue; your offline work is safe and will sync.');
+    _resetSession();
     state = const AsyncData(null);
   }
 }
