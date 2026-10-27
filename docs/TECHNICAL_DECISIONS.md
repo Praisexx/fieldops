@@ -8,13 +8,18 @@ Screens never wait on the network. They read SQLite (`sqflite`), and a backgroun
 - **Cost:** two copies of the data (server and device), so a conflict policy is needed (see 3).
 
 ## 2. Writes go through an outbox
+
+```
+tap -> validate locally -> outbox row (+ UUID) -> screen updates at once (overlay)
+    -> sync when online -> server validates -> job re-fetched -> outbox row removed
+```
 Every user action (status change, note, form answers, evidence upload/removal) is stored in an `outbox` table and applied to the screen immediately (`applyOutbox` overlays pending actions on the last server snapshot). A `SyncService` replays the outbox in order.
 - Network error, timeout or 5xx: stop, keep everything queued, retry later (connectivity regained, 45 s timer, pull-to-refresh, "Sync now").
 - 4xx rejection (e.g. the job was cancelled by dispatch meanwhile): the item is marked **failed** with the server's message; the user can retry or discard. Nothing disappears silently, and one bad item does not block the rest.
 - Evidence files are copied into app storage at capture time, so a picker temp file being cleaned up can't lose them.
 
 ## 3. Idempotency and conflicts
-Each action carries a client-generated UUID (`clientId`). The server stores it with a unique index, so replaying after a lost response returns the original result instead of creating a duplicate. State conflicts are decided by the server state machine (409 `invalid_transition`); the app mirrors the same rules locally so most mistakes are caught before queuing. Form answers are last-write-wins (documented limitation).
+Each action carries a client-generated UUID (`clientId`). The server stores it with a unique index, so replaying after a lost response returns the original result instead of creating a duplicate. State conflicts are decided by the server state machine (409 `invalid_transition`); the app mirrors the same rules locally so most mistakes are caught before queuing. Form answers are last-write-wins (documented limitation). Each action also carries the device time it happened (`occurredAt`); the server caps it at its own clock, so a phone with a wrong clock cannot record events in the future.
 
 ## 4. Job lifecycle
 `assigned → accepted | declined`, `accepted → in_progress | cancelled`, `in_progress → completed | failed`; the last four states are final.
@@ -40,4 +45,4 @@ Each action carries a client-generated UUID (`clientId`). The server stores it w
 Node/Express + Postgres on Railway. Chosen because it deploys from the repo with no config, and Postgres gives transactional status changes (row lock on the job while validating the transition). Evidence bytes are stored in Postgres (`bytea`, 10 MB cap) to avoid a second moving part; at real volume this should move to object storage.
 
 ## 9. Testing
-Tests focus on logic that can silently lose or corrupt field work: the lifecycle rules, the outbox overlay, the sync loop (offline, retry, rejection, crash recovery), repository validation, error mapping, filters, and the login form. See README for how to run them. Not covered: real camera/file-picker integration and real device connectivity changes (manual test checklist in README).
+Tests focus on logic that can silently lose or corrupt field work: the lifecycle rules, the outbox overlay, the sync loop (offline, retry, rejection, crash recovery), repository validation, error mapping, filters, and the login form. There are 48 app tests and 12 backend tests (the backend ones run against a real Postgres). See README for how to run them. Not covered: real camera/file-picker integration and real device connectivity changes (manual test checklist in README).
