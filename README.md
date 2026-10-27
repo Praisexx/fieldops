@@ -86,11 +86,3 @@ Manual checklist for what automated tests can't see: toggle airplane mode while 
 - App: `API_BASE_URL` via `--dart-define` (defaults to the deployed API). No secrets are in the app.
 - Backend: `DATABASE_URL`, `JWT_SECRET`, `PORT`, `AUTO_SEED` (see `backend/.env.example`). Secrets live in Railway variables, never in git.
 
-## Known limitations
-- Documents can be attached and uploaded but not previewed in the app (photos and text can).
-- Evidence is stored in the database (10 MB per file); fine for this scale, not for large volume.
-- Form answers are last-write-wins; no merge UI if two devices edit the same job.
-- Connectivity is detected via the OS network state plus request failures; a captive portal looks "online" until a request fails.
-- No push notifications; new assignments appear on the next sync/pull.
-- No rate limiting on login; no admin tooling for creating jobs (seed script only).
-- Android only.
